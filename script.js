@@ -37,14 +37,14 @@ function populateColumnSelect() {
     const columnSelect = document.getElementById('column-select');
     const headers = excelData[0];
 
-    headers.slice(0, 10).forEach((header, index) => {
+    headers.forEach((header, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = header;
         columnSelect.appendChild(option);
     });
 
-    console.log('Headers:', headers.slice(0, 10)); // Debugging
+    console.log('Headers:', headers); // Debugging
 }
 
 function searchData() {
@@ -64,10 +64,10 @@ function searchData() {
     });
 
     console.log('Search Results:', results); // Debugging
-    displayResults(results, columnIndex);
+    displayResults(results);
 }
 
-function displayResults(results, columnIndex) {
+function displayResults(results) {
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML = '';
 
@@ -76,97 +76,44 @@ function displayResults(results, columnIndex) {
         return;
     }
 
-    results.forEach(result => {
-        const horizontalTable = document.createElement('table');
-        const horizontalThead = document.createElement('thead');
-        const horizontalTbody = document.createElement('tbody');
-        const headerRow = document.createElement('tr');
-        const dataRow = document.createElement('tr');
+    // Create table to display results
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const tbody = document.createElement('tbody');
 
-        // Create header row and data row for the first 10 columns
-        result.slice(0, 10).forEach((cell, index) => {
-            const th = document.createElement('th');
-            const td = document.createElement('td');
-
-            th.textContent = excelData[0][index];
-
-            if (index === columnIndex && typeof cell === 'number' && isExcelDate(cell)) {
-                td.textContent = convertExcelDate(cell);
-            } else {
-                td.textContent = cell;
-            }
-
-            headerRow.appendChild(th);
-            dataRow.appendChild(td);
-        });
-
-        horizontalThead.appendChild(headerRow);
-        horizontalTbody.appendChild(dataRow);
-        horizontalTable.appendChild(horizontalThead);
-        horizontalTable.appendChild(horizontalTbody);
-
-        resultsDiv.appendChild(horizontalTable);
-
-        // Add "Description" line
-        const descriptionLine = document.createElement('div');
-        descriptionLine.textContent = 'Description';
-        descriptionLine.style.marginTop = '10px';
-        descriptionLine.style.marginBottom = '10px';
-        descriptionLine.style.fontWeight = 'bold';
-        resultsDiv.appendChild(descriptionLine);
-
-        // Add "Details" and "Remarks" text
-        const paymentInfoDiv = document.createElement('div');
-        paymentInfoDiv.style.display = 'flex';
-        paymentInfoDiv.style.justifyContent = 'space-between';
-
-        const details = document.createElement('div');
-        details.textContent = 'Details';
-        details.style.fontWeight = 'bold';
-
-        const remarks = document.createElement('div');
-        remarks.textContent = 'Remarks';
-        remarks.style.fontWeight = 'bold';
-
-        paymentInfoDiv.appendChild(details);
-        paymentInfoDiv.appendChild(remarks);
-        resultsDiv.appendChild(paymentInfoDiv);
-
-        // Create vertical table for the remaining columns
-        const verticalTable = document.createElement('table');
-        const verticalThead = document.createElement('thead');
-        const verticalTbody = document.createElement('tbody');
-
-        const verticalHeaders = ['Description', 'Details', 'Remarks'];
-
-        verticalHeaders.forEach(header => {
-            const verticalTh = document.createElement('th');
-            verticalTh.textContent = header;
-            verticalThead.appendChild(verticalTh);
-        });
-
-        result.slice(10).forEach((cell, index) => {
-            const verticalTr = document.createElement('tr');
-            const descriptionCell = document.createElement('td');
-            const detailsCell = document.createElement('td');
-            const remarksCell = document.createElement('td');
-
-            descriptionCell.textContent = verticalHeaders[index % 3];
-            detailsCell.textContent = cell;
-            remarksCell.textContent = cell;
-
-            verticalTr.appendChild(descriptionCell);
-            verticalTr.appendChild(detailsCell);
-            verticalTr.appendChild(remarksCell);
-
-            verticalTbody.appendChild(verticalTr);
-        });
-
-        verticalTable.appendChild(verticalThead);
-        verticalTable.appendChild(verticalTbody);
-
-        resultsDiv.appendChild(verticalTable);
+    // Create header row using the first row of excelData
+    const headerRow = document.createElement('tr');
+    excelData[0].forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        headerRow.appendChild(th);
     });
+    thead.appendChild(headerRow);
+
+    results.forEach(result => {
+        const row = document.createElement('tr');
+        result.forEach(cell => {
+            const td = document.createElement('td');
+            td.textContent = cell;
+            row.appendChild(td);
+        });
+        tbody.appendChild(row);
+    });
+
+    table.appendChild(thead);
+    table.appendChild(tbody);
+    resultsDiv.appendChild(table);
+
+    // Add "Description" and "Remarks" text below the table
+    const descriptionText = document.createElement('p');
+    descriptionText.textContent = 'Description';
+    descriptionText.style.fontWeight = 'bold';
+    resultsDiv.appendChild(descriptionText);
+
+    const remarksText = document.createElement('p');
+    remarksText.textContent = 'Remarks';
+    remarksText.style.fontWeight = 'bold';
+    resultsDiv.appendChild(remarksText);
 }
 
 function isExcelDate(num) {
