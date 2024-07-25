@@ -107,69 +107,76 @@ function displayResults(results, columnIndex) {
 
         resultsDiv.appendChild(horizontalTable);
 
-        // Add "Payment History" line
-        const paymentHistoryLine = document.createElement('div');
-        paymentHistoryLine.textContent = 'Payment History';
-        paymentHistoryLine.style.marginTop = '10px';
-        paymentHistoryLine.style.marginBottom = '10px';
-        paymentHistoryLine.style.fontWeight = 'bold';
-        resultsDiv.appendChild(paymentHistoryLine);
+        // Add "Description" line
+        const descriptionLine = document.createElement('div');
+        descriptionLine.textContent = 'Description';
+        descriptionLine.style.marginTop = '10px';
+        descriptionLine.style.marginBottom = '10px';
+        descriptionLine.style.fontWeight = 'bold';
+        resultsDiv.appendChild(descriptionLine);
 
-        // Add "Date of Payment" and "Amount Paid" text
+        // Add "Details" and "Remarks" text
         const paymentInfoDiv = document.createElement('div');
         paymentInfoDiv.style.display = 'flex';
         paymentInfoDiv.style.justifyContent = 'space-between';
 
-        const dateOfPayment = document.createElement('div');
-        dateOfPayment.textContent = 'Date of Payment';
-        dateOfPayment.style.fontWeight = 'bold';
+        const details = document.createElement('div');
+        details.textContent = 'Details';
+        details.style.fontWeight = 'bold';
 
-        const amountPaid = document.createElement('div');
-        amountPaid.textContent = 'Amount Paid';
-        amountPaid.style.fontWeight = 'bold';
+        const remarks = document.createElement('div');
+        remarks.textContent = 'Remarks';
+        remarks.style.fontWeight = 'bold';
 
-        paymentInfoDiv.appendChild(dateOfPayment);
-        paymentInfoDiv.appendChild(amountPaid);
+        paymentInfoDiv.appendChild(details);
+        paymentInfoDiv.appendChild(remarks);
         resultsDiv.appendChild(paymentInfoDiv);
 
         // Create vertical table for the remaining columns
         const verticalTable = document.createElement('table');
+        const verticalThead = document.createElement('thead');
         const verticalTbody = document.createElement('tbody');
 
-        result.slice(10).forEach((cell, index) => {
-            if (cell !== "" && cell !== undefined) { // Exclude blank cells
-                const row = document.createElement('tr');
-                const th = document.createElement('th');
-                const td = document.createElement('td');
+        const verticalHeaders = ['Description', 'Details', 'Remarks'];
 
-                th.textContent = excelData[0][index + 10];
-
-                if ((index + 10) === columnIndex && typeof cell === 'number' && isExcelDate(cell)) {
-                    td.textContent = convertExcelDate(cell);
-                } else {
-                    td.textContent = cell;
-                }
-
-                row.appendChild(th);
-                row.appendChild(td);
-                verticalTbody.appendChild(row);
-            }
+        verticalHeaders.forEach(header => {
+            const verticalTh = document.createElement('th');
+            verticalTh.textContent = header;
+            verticalThead.appendChild(verticalTh);
         });
 
+        result.slice(10).forEach((cell, index) => {
+            const verticalTr = document.createElement('tr');
+            const descriptionCell = document.createElement('td');
+            const detailsCell = document.createElement('td');
+            const remarksCell = document.createElement('td');
+
+            descriptionCell.textContent = verticalHeaders[index % 3];
+            detailsCell.textContent = cell;
+            remarksCell.textContent = cell;
+
+            verticalTr.appendChild(descriptionCell);
+            verticalTr.appendChild(detailsCell);
+            verticalTr.appendChild(remarksCell);
+
+            verticalTbody.appendChild(verticalTr);
+        });
+
+        verticalTable.appendChild(verticalThead);
         verticalTable.appendChild(verticalTbody);
+
         resultsDiv.appendChild(verticalTable);
     });
 }
 
-function isExcelDate(value) {
-    return value > 25569; // January 1, 1970, in Excel date serial number
+function isExcelDate(num) {
+    return num > 25569; // Simple check to see if the number is an Excel date
 }
 
-function convertExcelDate(excelSerial) {
-    const excelEpoch = new Date(1899, 11, 30); // Excel incorrectly treats 1900 as a leap year
-    const msPerDay = 24 * 60 * 60 * 1000;
-    const jsDate = new Date(excelEpoch.getTime() + excelSerial * msPerDay);
-    return jsDate.toLocaleDateString(); // Format date as needed
+function convertExcelDate(num) {
+    const date = new Date((num - 25569) * 86400 * 1000);
+    const yyyy = date.getFullYear();
+    const mm = ('0' + (date.getMonth() + 1)).slice(-2);
+    const dd = ('0' + date.getDate()).slice(-2);
+    return `${yyyy}-${mm}-${dd}`;
 }
-
-document.getElementById('search-button').addEventListener('click', searchData);
